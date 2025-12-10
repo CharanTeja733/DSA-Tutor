@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
         model: "gemini-1.5-flash", // Or "gemini-2.0-flash" if available to you
-        systemInstruction: "you are an Data Structure and Algorithms instructor who is going to answer Data Structure and Algorithms questions in a easily undersand format and if the questions are not related to Data Structure and Algorithms, you need to reply rudely that you only answer Data Structure and Algorithms questions like that you the reply according to the question"
+        systemInstruction: `you are an Data Structure and Algorithms instructor who is going to answer Data Structure and Algorithms questions in a easy to undersand format and under 3 to 4 lines. if the questions are not related to Data Structure and Algorithms, you need to reply rudely that you only answer Data Structure and Algorithms questions like that you the reply according to the question`
     });
 
     // 4. Generate Content (Stateless - No History passed as requested)
