@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI DSA Instructor</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-dark: #1e293b;
+            --primary: #8b5cf6;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--panel-dark);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            height: 100%;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            padding: 20px;
+            border-bottom: 1px solid #334155;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            background: linear-gradient(90deg, #a78bfa, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Chat Area */
+        #messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 12px 18px;
+            border-radius: 12px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: #334155;
+            color: var(--text-main);
+            border-bottom-left-radius: 2px;
+        }
+
+        .error {
+            align-self: center;
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid #ef4444;
+        }
+
+        /* Code Block Styling */
+        pre {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid #475569;
+        }
+
+        /* Input Area */
+        .input-box {
+            padding: 20px;
+            border-top: 1px solid #334155;
+            display: flex;
+            gap: 10px;
+            background: var(--panel-dark);
+        }
+
+        input {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        button {
+            padding: 0 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:disabled { background: #475569; cursor: wait; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <header>
+            <h1>DSA Instructor AI 🧠</h1>
+        </header>
+
+        <div id="messages">
+            <div class="msg bot">
+                Hello. I am your DSA Instructor. Ask me about Algorithms or Data Structures. 
+                <br>If you ask anything else, expect a rude reply.
+            </div>
+        </div>
+
+        <div class="input-box">
+            <input type="text" id="userInput" placeholder="Type your question..." autocomplete="off">
+            <button id="sendBtn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const input = document.getElementById('userInput');
+        const btn = document.getElementById('sendBtn');
+
+        // Simple Markdown formatter
+        function formatText(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function addMessage(text, type) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerHTML = type === 'bot' ? formatText(text) : text;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            input.value = '';
+            btn.disabled = true;
+            btn.innerText = '...';
+
+            try {
+                // Call OUR backend, not Google directly
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Server Error');
+
+                addMessage(data.reply, 'bot');
+
+            } catch (err) {
+                addMessage("Error: " + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Send';
+                input.focus();
+            }
+        }
+
+        btn.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
